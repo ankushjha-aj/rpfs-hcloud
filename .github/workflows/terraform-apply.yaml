@@ -67,15 +67,14 @@ jobs:
       
       # Generate Terraform execution plan with locking disabled 
       - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=tfplan-${{ inputs.env }}' terraform/plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=terraform.plan' terraform/plan 
       
       # Upload terraform plan artifact
       - name: Save terraform plan
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-${{ inputs.env }}
-          path: infra/terraform/tfplan-${{ inputs.env }}
-          retention-days: 1
+          name: terraform.plan
+          path: infra/terraform/terraform.plan
 
   # Apply for TF Files
   apply:
@@ -106,11 +105,11 @@ jobs:
           aws-region: eu-central-1
 
 
-      # Download Plan Artifacts
-      - name: Download Plan Artifact
+      # Download terraform plan artifact
+      - name: Restore terraform plan
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-${{ inputs.env }}
+          name: terraform.plan
           path: infra/terraform
       
       # Install Terraform
@@ -125,4 +124,4 @@ jobs:
         
       # Apply Terraform changes using the saved execution plan
       - name: Terraform Apply
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve tfplan-${{ inputs.env }}' terraform/apply
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
