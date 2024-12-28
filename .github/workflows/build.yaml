@@ -15,6 +15,6 @@ jobs:
       ref: ${{ github.ref }} 
       inputs: |
         env: stokenet
-        ref: ${{ github.sha }} 
+        ref: ${{ github.sha }}  
     secrets:
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
