@@ -84,13 +84,13 @@ server_conf:
 # Add volume configurations
 volume_conf:
   master-vol:
-    size: 05
+    size: 10
     location: "fsn1"
     format: "ext4"
     automount: false 
     delete_protection: false
   slave-vol:
-    size: 05
+    size: 10
     location: "fsn1"
     format: "ext4"
     automount: false 
