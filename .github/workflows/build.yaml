@@ -18,18 +18,3 @@ jobs:
         ref: ${{ github.sha }} 
     secrets:
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
-
-  terraform-apply-stage:
-    name: "Terraform apply"
-    if: ${{ github.ref_name == 'main' }}
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile
-    # Input parameters for the job
-    with:
-      workflow: terraform-plan # Triggering the 'apply' workflow
-      ref: ${{ github.ref }} # Using the Git reference from the push event
-      inputs: |
-        env: dev # Using the environment from the push event
-        ref: ${{ github.sha }} # Using the Git SHA from the push event
-    # Secrets needed for the job (GH_INFRA_PAT)
-    secrets:
-      GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
