@@ -66,23 +66,18 @@ jobs:
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
       
+      # Generate Terraform execution plan and save it to terraform.plan file
       - name: Terraform plan
         run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=./terraform.plan' terraform/plan 
         env:
           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
-          
-      - name: List directory contents
-        run: |
-          pwd
-          ls -la
-          ls -la terraform.plan
-          
+    
       - name: Save terraform plan
         uses: actions/upload-artifact@v4
         with:
           name: terraform.plan
           path: ./infra/terraform/terraform.plan
-          if-no-files-found: error  
+          if-no-files-found: error 
 
   # Apply for TF Files
   apply:
@@ -113,12 +108,22 @@ jobs:
           aws-region: eu-central-1
 
 
-      # Download terraform plan artifact
-      - name: Restore terraform plan
+      # Download the terraform plan artifact
+      - name: Download terraform plan
         uses: actions/download-artifact@v4
         with:
           name: terraform.plan
-          path: infra/terraform
+          path: ${{ github.workspace }}/infra/terraform
+    
+    # Add a verification step to ensure the plan was downloaded
+      - name: Verify plan file
+        run: |
+          ls -la
+          if [ ! -f terraform.plan ]; then
+            echo "Error: terraform.plan file not found!"
+            exit 1
+          fi
+        working-directory: ./infra/terraform
       
       # Install Terraform
       - name: Terraform install
