@@ -66,18 +66,23 @@ jobs:
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
       
-      # # Generate Terraform execution plan and save it to terraform.plan file
       - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=terraform.plan' terraform/plan 
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=./terraform.plan' terraform/plan 
         env:
           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
-      
-      # Upload terraform plan artifact
+          
+      - name: List directory contents
+        run: |
+          pwd
+          ls -la
+          ls -la terraform.plan
+          
       - name: Save terraform plan
         uses: actions/upload-artifact@v4
         with:
           name: terraform.plan
-          path: infra/terraform/terraform.plan
+          path: ./infra/terraform/terraform.plan
+          if-no-files-found: error  
 
   # Apply for TF Files
   apply:
