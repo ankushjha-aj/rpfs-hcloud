@@ -63,8 +63,7 @@ jobs:
     name: "Terraform Plan ${{ inputs.env }}"
     needs: [validate]
     runs-on: ubuntu-latest
-    concurrency: terraform-${{ matrix.env }}
-    environment: ${{ matrix.env }}
+    environment: ${{ inputs.env }}
     defaults:
       run:
         working-directory: ./infra/terraform
@@ -72,10 +71,7 @@ jobs:
       HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
     strategy:
       fail-fast: false
-      matrix:
-        env:
-        - stokenet
-
+      
     steps:
       # Checkout Project
       - name: Checkout Project
@@ -97,8 +93,8 @@ jobs:
       
       # Initialize Terraform workspace
       - name: Terraform init
-        run: make ENV=${{ matrix.env }} terraform/init
+        run: make ENV=${{ inputs.env }} terraform/init
       
       # Generate Terraform execution plan with locking disabled 
       - name: Terraform plan
-        run: make ENV=${{ matrix.env }} TF_CMD_ARGS='-lock=false' terraform/plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
