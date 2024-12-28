@@ -38,6 +38,7 @@ jobs:
         working-directory: ./infra/terraform
     env:
       HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
     strategy:
       fail-fast: false
     steps:
@@ -65,9 +66,11 @@ jobs:
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
       
-      # Generate Terraform execution plan with locking disabled 
+      # # Generate Terraform execution plan and save it to terraform.plan file
       - name: Terraform plan
         run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=terraform.plan' terraform/plan 
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
       
       # Upload terraform plan artifact
       - name: Save terraform plan
@@ -125,3 +128,5 @@ jobs:
       # Apply Terraform changes using the saved execution plan
       - name: Terraform Apply
         run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
