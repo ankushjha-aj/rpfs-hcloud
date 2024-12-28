@@ -1,0 +1,19 @@
+# Ipfs server variables
+kubo_url: "https://dist.ipfs.tech/kubo/v0.32.1/kubo_v0.32.1_linux-amd64.tar.gz"
+update_api_ip: true
+api_ip: 0.0.0.0
+update_gateway_ip: true
+gateway_ip: 0.0.0.0
+
+# Ipfs Cluster variables
+ipfs_cluster_service: "https://dist.ipfs.tech/ipfs-cluster-service/v1.1.2/ipfs-cluster-service_v1.1.2_linux-amd64.tar.gz"
+ipfs_cluster_ctl: "https://dist.ipfs.tech/ipfs-cluster-ctl/v1.1.2/ipfs-cluster-ctl_v1.1.2_linux-amd64.tar.gz"
+update_ipfsproxy_multiaddress_ip: true
+ipfsproxy_multiaddress_ip: 0.0.0.0
+update_pinsvcapi_multiaddress_ip: true
+pinsvcapi_multiaddress_ip: 0.0.0.0
+update_restapi_multiaddress_ip: true
+restapi_multiaddress_ip: 0.0.0.0
+
+# Ipfs Multi Node Cluster variables
+setup_multi_node_cluster: true

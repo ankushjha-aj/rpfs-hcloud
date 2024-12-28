@@ -1,0 +1,76 @@
+---
+- name: Setup IPFS Server & Cluster
+  hosts: ipfs_master,ipfs_slaves
+  vars_files: vars.yml
+  roles:
+    - ipfs
+    - ipfs-cluster
+
+- name: Configure Multi Node Cluster on master
+  hosts: ipfs_master
+  vars_files: vars.yml
+  tasks:
+  - block:
+    - name: Fetch service.json file from master
+      ansible.builtin.fetch:
+        src: "{{ ansible_user_dir }}/.ipfs-cluster/service.json"
+        dest: service.json
+        flat: yes
+    
+    - name: Fetch master node peer id
+      ansible.builtin.shell: ipfs-cluster-ctl peers ls | grep -Eo '^.{53}' | head -n 1
+      register: peer_output
+      changed_when: false
+
+    - name: Save peer id 
+      ansible.builtin.copy:
+        content: "/ip4/{{ ansible_host }}/tcp/9096/p2p/{{ peer_output.stdout_lines[0] | regex_replace(' ', '') }}"
+        dest: peer_id.txt
+        mode: '0644'
+      delegate_to: localhost
+    when: setup_multi_node_cluster
+
+
+- name: Configure Multi Node Cluster on slaves
+  hosts: ipfs_slaves
+  vars_files: vars.yml
+  tasks:
+  - block:
+    - name: upload service file to slaves
+      ansible.builtin.copy:
+        src: service.json
+        dest: "{{ ansible_user_dir }}/.ipfs-cluster/service.json"
+        mode: '0644'
+
+    - name: Read Master node Peer id
+      set_fact:
+        peer_id: "{{ lookup('file', 'peer_id.txt') }}"
+      delegate_to: localhost
+    
+    - name: update systemcd file to slaves
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/system/ipfs-cluster.service
+        regexp: "ExecStart=/usr/bin/ipfs-cluster-service daemon"
+        line: 'ExecStart=/usr/bin/ipfs-cluster-service daemon --bootstrap {{ peer_id }} '
+    
+    - name: Reload systemd daemon
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Restart IPFS Cluster 
+      ansible.builtin.systemd:
+        name: ipfs-cluster.service
+        enabled: yes
+        state: restarted
+
+    - name: Check if IPFS Cluster is running
+      ansible.builtin.systemd:
+        name: ipfs-cluster.service
+        state: started
+      register: service_status
+
+    - name: Fail if the IPFS Cluster is not running
+      ansible.builtin.assert:
+        that:
+        - service_status.status.ActiveState == 'active'
+    when: setup_multi_node_cluster
