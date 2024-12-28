@@ -1,6 +1,5 @@
 name: Trigger Workflow
 
-# Triggering the workflow on a workflow_call event
 on:
   workflow_call:
     inputs:
@@ -12,7 +11,7 @@ on:
         description: 'Workflow name'
         required: true
         type: string
-      inputs:
+      workflow_inputs:
         description: 'Workflow inputs'
         required: true
         type: string
@@ -33,8 +32,8 @@ jobs:
           route: POST /repos/${{ github.repository }}/actions/workflows/:workflow/dispatches
           mediaType: |
             format: application/vnd.github.v3+json
-          workflow: ${{ inputs.workflow }}.yaml 
-          inputs: ${{ inputs.inputs }}  
-          ref: ${{ inputs.ref }} 
+          workflow: ${{ inputs.workflow }}.yaml
+          inputs: ${{ inputs.workflow_inputs }}
+          ref: ${{ inputs.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}

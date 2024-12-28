@@ -8,8 +8,7 @@ jobs:
 # Job for applying Terraform in the stokenet environment.
   terraform-apply-stokenet:
     name: "Terraform apply"
-    #if: ${{ github.ref_name == 'develop'}}
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile  
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile
 
     # Input parameters for the job
     with:
