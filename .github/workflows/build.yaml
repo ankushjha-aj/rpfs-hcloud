@@ -1,7 +1,7 @@
 name: Deploy to Terraform
 on:
   push:
-    branches: ['main', 'develop']
+    branches: ['main', 'develop', 'makefile']
 
 # Jobs to be executed in the workflow
 jobs:
