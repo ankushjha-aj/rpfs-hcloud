@@ -67,10 +67,10 @@ jobs:
       
       # Generate Terraform execution plan with locking disabled 
       - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=tfplan-${{ inputs.env }}' terraform/plan
       
-      # Upload plan Artifacts
-      - name: Upload Plan Artifact
+      # Upload terraform plan artifact
+      - name: Save terraform plan
         uses: actions/upload-artifact@v4
         with:
           name: tfplan-${{ inputs.env }}
@@ -125,7 +125,4 @@ jobs:
         
       # Apply Terraform changes using the saved execution plan
       - name: Terraform Apply
-        run: |
-          make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve tfplan-${{ inputs.env }}' terraform/apply
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve tfplan-${{ inputs.env }}' terraform/apply
