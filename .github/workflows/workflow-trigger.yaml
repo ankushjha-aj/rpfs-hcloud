@@ -1,5 +1,6 @@
 name: Trigger Workflow
 
+# Triggering the workflow on a workflow_call event
 on:
   workflow_call:
     inputs:
@@ -11,7 +12,7 @@ on:
         description: 'Workflow name'
         required: true
         type: string
-      workflow_inputs:
+      inputs:
         description: 'Workflow inputs'
         required: true
         type: string
@@ -20,15 +21,20 @@ on:
         required: true
 
 jobs:
+  # Job to dispatch a workflow based on inputs
   dispatch:
     runs-on: ubuntu-latest
     name: "Dispatch (${{ inputs.workflow }})"
     steps:
+      # Dispatch the specified workflow with provided inputs and on the specified Git Ref
       - name: Dispatch workflow
         uses: octokit/request-action@v2.x
         with:
-          route: POST /repos/${{ github.repository }}/actions/workflows/${{ inputs.workflow }}.yaml/dispatches
+          route: POST /repos/${{ github.repository }}/actions/workflows/:workflow/dispatches
+          mediaType: |
+            format: application/vnd.github.v3+json
+          workflow: ${{ inputs.workflow }}.yaml
+          inputs: ${{ inputs.inputs }}
           ref: ${{ inputs.ref }}
-          inputs: ${{ fromJSON(inputs.workflow_inputs) }} 
         env:
           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
