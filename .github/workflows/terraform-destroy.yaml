@@ -1,0 +1,137 @@
+name: Terraform Destroy
+on: 
+  workflow_call:
+    inputs:
+      env:
+        description: 'mainnet | stokenet'
+        required: false
+        type: string
+        default: stokenet
+      ref:
+        description: Git Ref (Default to workflow branch)
+        required: false
+        type: string
+      terraform_version:
+        type: string
+        required: false
+        default: "1.7.2"
+        description: Terraform version to use
+    secrets:
+      GH_INFRA_PAT:
+        required: true
+      HCLOUD_TOKEN:
+        required: true
+      HCLOUD_ACCESS_KEY:
+        required: true
+      HCLOUD_SECRET_KEY:
+        required: true
+
+# Jobs to be executed in the workflow
+jobs:
+  # Plan for TF Files
+  plan:
+    name: "Plan (${{ inputs.env }})"
+    runs-on: ubuntu-latest
+    concurrency: terraform-${{ inputs.env }}
+    environment: ${{ inputs.env }}
+    defaults:
+      run:
+        working-directory: ./infra/terraform
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+    strategy:
+      fail-fast: false
+    steps:
+      # Checkout Project
+      - name: Checkout Project
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      
+      # Configure AWS CLI for Hcloud Storage Bucket
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.HCLOUD_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.HCLOUD_SECRET_KEY }}
+          aws configure set region eu-central-1
+      
+      # Install Terrafrom
+      - name: Terraform install
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      
+      # Initialize Terraform workspace
+      - name: Terraform init
+        run: make ENV=${{ inputs.env }} terraform/init
+      
+      # Generate Terraform execution plan with locking disabled 
+      - name: Terraform plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
+      
+      # Upload plan Artifacts
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: tfplan-${{ inputs.env }}
+          path: ./infra/terraform/tfplan
+          retention-days: 1
+
+  # Destroy 
+  Destroy:
+    needs: [plan]
+    name: "Destroy (${{ inputs.env }})"
+    runs-on: ubuntu-latest
+    concurrency: terraform-${{ inputs.env }}
+    environment: ${{ inputs.env }}
+    defaults:
+      run:
+        working-directory: ./infra/terraform
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+    strategy:
+      fail-fast: false
+    steps:
+      # Checkout Project
+      - name: Checkout Project
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+      
+      # Configure Git Override for private Repositories
+      - name: Configure git override
+        run: |
+          git config --global url."https://oauth2:${{ secrets.GH_INFRA_PAT }}@github.com".insteadOf ssh://git@github.com
+
+      # Configure AWS CLI
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.HCLOUD_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.HCLOUD_SECRET_KEY }}
+          aws configure set region eu-central-1
+
+
+      # Download Plan Artifacts
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: tfplan-${{ inputs.env }}
+          path: ./infra/terraform
+
+      # Install Terraform
+      - name: Terraform install
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      
+      # Initialize Terraform workspace
+      - name: Terraform init
+        run: make ENV=${{ inputs.env }} terraform/init
+
+      # Validate Terraform configuration
+      - name: Terraform validate
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='--auto-approve' terraform/destroy
+
+
+

@@ -1,0 +1,169 @@
+- name: Update all host packages
+  ansible.builtin.apt:
+    update_cache: yes
+    state: latest
+
+- name: Check if the IPFS Cluster Service tar file already exists
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/ipfs-cluster-service.tar.gz"
+  register: ipfs_cluster_service_file
+
+- name: Download IPFS Cluster Service tar file
+  ansible.builtin.get_url:
+    url: "{{ ipfs_cluster_service }}"
+    dest: "{{ ansible_user_dir }}/ipfs-cluster-service.tar.gz"
+    mode: "0644"
+  register: download_result
+  retries: 10
+  delay: 15
+  until: download_result is succeeded
+  when: not ipfs_cluster_service_file.stat.exists
+
+- name: Extract IPFS Cluster Service tar.gz file
+  ansible.builtin.unarchive:
+    src: "{{ ansible_user_dir }}/ipfs-cluster-service.tar.gz"
+    dest: "{{ ansible_user_dir }}"
+    remote_src: yes
+  when: ipfs_cluster_service_file.stat.exists or download_result is succeeded
+
+- name: Check IPFS Cluster Service Command exists
+  ansible.builtin.stat:
+    path: "/usr/bin/ipfs-cluster-service"
+  register: ipfs_cluster_service_cli
+
+- name: Copy ipfs Cluster Service binary to /usr/bin
+  ansible.builtin.command:
+    cmd: cp {{ ansible_user_dir }}/ipfs-cluster-service/ipfs-cluster-service /usr/bin/ipfs-cluster-service
+  when: not ipfs_cluster_service_cli.stat.exists
+
+- name: Check IPFS Cluster Service version
+  ansible.builtin.command:
+    cmd: ipfs-cluster-service version
+  register: ipfs_cluster_service_version
+  ignore_errors: no
+
+- name: Display IPFS Cluster Service version
+  debug:
+    msg: "IPFS Cluster service version: {{ ipfs_cluster_service_version.stdout }}"
+
+- name: Check if the IPFS Cluster ctl tar file already exists
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/ipfs-cluster-ctl.tar.gz"
+  register: ipfs_cluster_ctl_file
+
+- name: Download IPFS Cluster ctl tar file
+  ansible.builtin.get_url:
+    url: "{{ ipfs_cluster_ctl }}"
+    dest: "{{ ansible_user_dir }}/ipfs-cluster-ctl.tar.gz"
+    mode: "0644"
+  register: download_ctl_result
+  retries: 10
+  delay: 15
+  until: download_ctl_result is succeeded
+  when: not ipfs_cluster_ctl_file.stat.exists
+
+- name: Extract IPFS Cluster ctl tar.gz file
+  ansible.builtin.unarchive:
+    src: "{{ ansible_user_dir }}/ipfs-cluster-ctl.tar.gz"
+    dest: "{{ ansible_user_dir }}"
+    remote_src: yes
+  when: ipfs_cluster_ctl_file.stat.exists or download_ctl_result is succeeded
+
+- name: Check IPFS Cluster ctl Command exists
+  ansible.builtin.stat:
+    path: "/usr/bin/ipfs-cluster-ctl"
+  register: ipfs_cluster_ctl_cli
+
+- name: Copy ipfs Cluster ctl binary to /usr/bin
+  ansible.builtin.command:
+    cmd: cp {{ ansible_user_dir }}/ipfs-cluster-ctl/ipfs-cluster-ctl /usr/bin/ipfs-cluster-ctl
+  when: not ipfs_cluster_ctl_cli.stat.exists
+
+- name: Check IPFS Cluster ctl version
+  ansible.builtin.command:
+    cmd: ipfs-cluster-ctl --version
+  register: ipfs_cluster_ctl_version
+  ignore_errors: no
+
+- name: Display IPFS Cluster ctl version
+  debug:
+    msg: "IPFS Cluster ctl version: {{ ipfs_cluster_ctl_version.stdout }}"
+
+- name: Check IPFS Cluster Service already Initialized
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.ipfs-cluster"
+  register: ipfs_dir
+
+- name: Initialize IPFS Cluster
+  ansible.builtin.command:
+    cmd: ipfs-cluster-service init
+  when: not ipfs_dir.stat.exists
+
+- name: update ipfsproxy multiaddress IP
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.ipfs-cluster/service.json"
+    regexp: '"listen_multiaddress": "/ip4/127.0.0.1/tcp/9095"'
+    line: '"listen_multiaddress": "/ip4/{{ ipfsproxy_multiaddress_ip }}/tcp/9095",'
+  when: update_ipfsproxy_multiaddress_ip
+
+- name: update pinsvcapi multiaddress IP
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.ipfs-cluster/service.json"
+    regexp: '"http_listen_multiaddress": "/ip4/127.0.0.1/tcp/9097"'
+    line: '"http_listen_multiaddress": "/ip4/{{ pinsvcapi_multiaddress_ip }}/tcp/9097",'
+  when: update_pinsvcapi_multiaddress_ip
+
+- name: update restapi multiaddress IP
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.ipfs-cluster/service.json"
+    regexp: '"http_listen_multiaddress": "/ip4/127.0.0.1/tcp/9094"'
+    line: '"http_listen_multiaddress": "/ip4/{{ restapi_multiaddress_ip }}/tcp/9094",'
+  when: update_restapi_multiaddress_ip
+
+- name: Ensure jq is installed
+  ansible.builtin.package:
+    name: jq
+    state: present
+
+- name: Read basic_auth_credentials
+  ansible.builtin.set_fact:
+    basic_auth_json: "{{ basic_auth_credentials | to_json }}"
+
+- name: Update basic_auth_credentials
+  ansible.builtin.shell: |
+    jq '.api.restapi.basic_auth_credentials = {{ basic_auth_json }}'  {{ ansible_user_dir }}/.ipfs-cluster/service.json > /tmp/service.json && mv /tmp/service.json  {{ ansible_user_dir }}/.ipfs-cluster/service.json
+
+- name: Check IPFS Cluster Service
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/ipfs-cluster.service"
+  register: ipfs_cluster_service
+
+- name: Create a systemd service file
+  ansible.builtin.template:
+    src: templates/ipfs-cluster.service.j2
+    dest: /etc/systemd/system/ipfs-cluster.service
+    mode: '0644'
+  when: not ipfs_cluster_service.stat.exists
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start IPFS Cluster
+  ansible.builtin.systemd:
+    name: ipfs-cluster.service
+    enabled: yes
+    state: started
+
+- name: Check if IPFS Cluster is running
+  ansible.builtin.systemd:
+    name: ipfs-cluster.service
+    state: started
+  register: service_status
+
+- name: Fail if the IPFS Cluster is not running
+  ansible.builtin.assert:
+    that:
+     - service_status.status.ActiveState == 'active'
+    fail_msg: "The IPFS Cluster is not running. Please check the service."
+    success_msg: "The IPFS Cluster is running successfully."

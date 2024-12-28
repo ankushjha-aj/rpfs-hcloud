@@ -1,0 +1,116 @@
+- name: Update all host packages
+  ansible.builtin.apt:
+    update_cache: yes
+    state: latest
+
+- name: Check if the Kubo tar file already exists
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/kubo.tar.gz"
+  register: kubo_file
+
+- name: Download Kubo tar file
+  ansible.builtin.get_url:
+    url: "{{ kubo_url }}"
+    dest: "{{ ansible_user_dir }}/kubo.tar.gz"
+    mode: "0644"
+  register: download_result
+  retries: 10
+  delay: 15
+  until: download_result is succeeded
+  when: not kubo_file.stat.exists
+
+- name: Extract kubo tar.gz file
+  ansible.builtin.unarchive:
+    src: "{{ ansible_user_dir }}/kubo.tar.gz"
+    dest: "{{ ansible_user_dir }}"
+    remote_src: yes
+  when: kubo_file.stat.exists or download_result is succeeded
+
+- name: Check IPFS Command exists
+  ansible.builtin.stat:
+    path: "/usr/local/bin/ipfs"
+  register: ipfs_cli
+
+- name: Copy ipfs binary to /usr/local/bin
+  ansible.builtin.command:
+    cmd: cp {{ ansible_user_dir }}/kubo/ipfs /usr/local/bin/ipfs
+  when: not ipfs_cli.stat.exists
+
+- name: Check IPFS version
+  ansible.builtin.command:
+    cmd: ipfs --version
+  register: ipfs_version
+  ignore_errors: no
+
+- name: Display IPFS version
+  debug:
+    msg: "IPFS version: {{ ipfs_version.stdout }}"
+
+- name: Check IPFS already Initialized
+  ansible.builtin.stat:
+    path: "{{ ansible_user_dir }}/.ipfs"
+  register: ipfs_dir
+
+- name: Initialize IPFS
+  ansible.builtin.command:
+    cmd: ipfs init
+  when: not ipfs_dir.stat.exists
+
+- name: Configure IPFS Access-Control-Allow-Origin
+  ansible.builtin.shell: >
+    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin
+    '["http://{{ ansible_host }}:5001", "http://localhost:3000", "http://127.0.0.1:5001","https://webui.ipfs.io"]'
+
+- name: Configure IPFS Access-Control-Allow-Methods
+  ansible.builtin.shell: >
+    ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods
+    '["PUT", "POST"]'
+
+- name: update API IP
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.ipfs/config"
+    regexp: '"API": "/ip4/127.0.0.1/tcp/5001"'
+    line: '"API": "/ip4/{{ api_ip }}/tcp/5001",'
+  when: update_api_ip
+
+- name: update Gateway IP
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_user_dir }}/.ipfs/config"
+    regexp: '"Gateway": "/ip4/127.0.0.1/tcp/8080"'
+    line: '"Gateway": "/ip4/{{ gateway_ip }}/tcp/8080",'
+  when: update_gateway_ip
+
+- name: Check IPFS Service
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/ipfs.service"
+  register: ipfs_service
+
+- name: Create a systemd service file
+  ansible.builtin.template:
+    src: templates/ipfs.service.j2
+    dest: /etc/systemd/system/ipfs.service
+    mode: '0644'
+  when: not ipfs_service.stat.exists
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: yes
+
+- name: Enable and start IPFS service
+  ansible.builtin.systemd:
+    name: ipfs.service
+    enabled: yes
+    state: started
+
+- name: Check if IPFS service is running
+  ansible.builtin.systemd:
+    name: ipfs.service
+    state: started
+  register: service_status
+
+- name: Fail if the service is not running
+  ansible.builtin.assert:
+    that:
+     - service_status.status.ActiveState == 'active'
+    fail_msg: "The IPFS service is not running. Please check the service."
+    success_msg: "The IPFS service is running successfully."

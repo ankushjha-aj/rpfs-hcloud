@@ -1,0 +1,13 @@
+[Unit]
+Description=IPFS cluster daemon
+After=network.target
+
+[Service]
+User=root
+ExecStart=/usr/bin/ipfs-cluster-service daemon
+Restart=always
+RestartSec=10
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target
