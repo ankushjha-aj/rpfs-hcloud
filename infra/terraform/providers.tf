@@ -14,5 +14,4 @@ terraform {
 
 # Configure the Hetzner Cloud provider
 provider "hcloud" {
-  token = "kN7WKJCGC2NsH0DvsRLNXOnqElZxzKNywoVYWTxXJamNtYqJwd31c3lU4aJBIHDQ"
 }
