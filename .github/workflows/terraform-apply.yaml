@@ -113,17 +113,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: terraform.plan
-          path: ${{ github.workspace }}/infra/terraform
-    
-    # Add a verification step to ensure the plan was downloaded
-      - name: Verify plan file
-        run: |
-          ls -la
-          if [ ! -f terraform.plan ]; then
-            echo "Error: terraform.plan file not found!"
-            exit 1
-          fi
-        working-directory: ./infra/terraform
+          path: infra/terraform
       
       # Install Terraform
       - name: Terraform install
