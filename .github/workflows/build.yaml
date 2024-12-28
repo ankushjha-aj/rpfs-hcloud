@@ -1,20 +1,20 @@
 name: Deploy to Terraform
 on:
   push:
-    branches: ['main', 'develop']
+    branches: ['main', 'develop', 'makefile']
 
 # Jobs to be executed in the workflow
 jobs:
   terraform-apply-stokenet:
-    name: "Terraform apply Stokenet"
+    name: "Terraform apply"
     if: ${{ github.ref_name == 'develop'}}
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile 
 
     with:
-      workflow: terraform-apply 
+      workflow: apply 
       ref: ${{ github.ref }} 
       inputs: |
         env: stokenet
-        ref: ${{ github.sha }} 
+        ref: ${{ github.sha }}  
     secrets:
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
