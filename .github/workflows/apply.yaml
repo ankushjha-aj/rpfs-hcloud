@@ -18,7 +18,7 @@ on:
 jobs:
    terraform-apply-stokenet:
     name: "Terraform Apply Stokenet"
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-apply.yaml@makefile  
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-apply.yaml@makefile
     with:
       ref: ${{ github.ref }} 
       env: ${{ github.event.inputs.env }} 
