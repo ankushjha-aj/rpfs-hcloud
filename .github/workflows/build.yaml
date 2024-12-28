@@ -9,7 +9,7 @@ jobs:
   terraform-apply-stokenet:
     name: "Terraform apply"
     if: ${{ github.ref_name == 'develop'}}
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile 
     with:
       workflow: terraform-apply # Triggering the 'apply' workflow
       ref: ${{ github.ref }} # Using the Git reference from the push event

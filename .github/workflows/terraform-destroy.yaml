@@ -106,7 +106,6 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }} 
           aws configure set region eu-central-1
 
-
       # Download Plan Artifacts
       - name: Download Plan Artifact
         uses: actions/download-artifact@v3
