@@ -1,0 +1,32 @@
+# name: Run Ansible playbook
+# on:
+#   workflow_dispatch: #Manual Trigger 
+#       inputs:
+#         env:
+#           description: 'Environment'
+#           required: true
+#           type: choice
+#           default: stokenet
+#           options:
+#             - stokenet
+#             - mainnet
+#         ssh_key:
+#           description: 'SSH Key File'
+#           required: true
+#           type: choice
+#           default: STOKENET_SERVER_SSH_KEY
+#           options:
+#             - STOKENET_SERVER_SSH_KEY
+#             - MAINNET_SERVER_SSH_KEY
+
+# # Jobs to be executed in the workflow
+# jobs:
+#    ansible:
+#     name: "Run Ansible on ${{ inputs.env }}"
+#     uses: wowzaaa/rpfs.infrastructure/.github/workflows/ansible.yaml@feature/ansible_setup
+#     with:
+#       ref: ${{ github.ref }}  # Using the Git reference from the workflow input
+#       env: ${{ inputs.env }} # Using the environment from the workflow input
+#       run_playbook: true
+#     secrets:
+#       SSH_KEY_FILE: ${{ secrets[inputs.ssh_key] }}

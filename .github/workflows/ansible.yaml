@@ -1,0 +1,70 @@
+# name: Ansible Run
+# on: 
+#   workflow_call:
+#     inputs:
+#       env:
+#         description: 'stokenet | mainnet'
+#         required: false
+#         type: string
+#         default: stokenet
+#       run_playbook:
+#         description: 'Flag to Run Playbook'
+#         required: false
+#         type: boolean
+#         default: false
+#       ref:
+#         description: Git Ref (Default to workflow branch)
+#         required: false
+#         type: string
+#     secrets:
+#       SSH_KEY_FILE:
+#         required: true
+
+# # Jobs to be executed in the workflow
+# jobs:
+#   # Run Playbook
+#   run-playbook:
+#     name: "Playbook (${{ inputs.env }})"
+#     runs-on: ubuntu-latest
+#     environment: ${{ inputs.env }}
+#     defaults:
+#       run:
+#         working-directory: ./infra/ansible
+#     strategy:
+#       fail-fast: false
+#     steps:
+#       # Checkout Project
+#       - name: Checkout Project
+#         uses: actions/checkout@v3
+#         with:
+#           ref: ${{ inputs.ref || github.ref }}
+
+#       # Setup SSH file to login
+#       - name: Set up SSH Key file
+#         run: |
+#           echo "${{ secrets.SSH_KEY_FILE }}" >> private_key.pem
+#           chmod 400 private_key.pem
+
+#       # install Ansible
+#       - name: Install Ansible
+#         shell: bash
+#         run: |
+#           sudo apt update
+#           sudo apt install software-properties-common -y 
+#           sudo add-apt-repository --yes --update ppa:ansible/ansible
+#           sudo apt install ansible -y 
+#           sudo ansible --version
+
+#       # Check Ansible Playbook
+#       - name: verify Ansible playbook
+#         shell: bash
+#         run: |
+#           sudo ansible all -m setup -i "config/${{ inputs.env }}/inventory.ini"
+# #         sudo ansible-playbook playbook.yml --syntax-check -i "config/${{ inputs.env }}/inventory.ini" -e "vars_file=config/${{ inputs.env }}/vars.yml"
+
+#       # Run Ansible Playbook
+#       - name: Run Ansible playbook
+#         if: ${{ inputs.run_playbook == 'true' }}
+#         shell: bash
+#         run: |
+#           sudo ansible-playbook playbook.yml -i "config/${{ inputs.env }}/inventory.ini" -e "vars_file=config/${{ inputs.env }}/vars.yml"

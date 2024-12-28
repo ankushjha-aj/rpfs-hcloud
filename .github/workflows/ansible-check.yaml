@@ -1,0 +1,24 @@
+# name: verify Ansible Playbook 
+# on:
+#   pull_request:
+#     branches: ['develop']
+
+# # Jobs to be executed in the workflow
+# jobs:
+#    ansible-stokenet:
+#     name: "Verify Ansible Playbook for stokenet"
+#     uses: wowzaaa/rpfs.infrastructure/.github/workflows/ansible.yaml@feature/ansible_setup
+#     with:
+#       ref: ${{ github.ref }}  # Using the Git reference from the workflow input
+#       env: stokenet # Using the environment from the workflow input
+#     secrets:
+#       SSH_KEY_FILE: ${{ secrets.STOKENET_SERVER_SSH_KEY }}
+
+#    ansible-mainnet:
+#     name: "Verify Ansible Playbook for mainnet"
+#     uses: wowzaaa/rpfs.infrastructure/.github/workflows/ansible.yaml@feature/ansible_setup
+#     with:
+#       ref: ${{ github.ref }}  # Using the Git reference from the workflow input
+#       env: mainnet # Using the environment from the workflow input
+#     secrets:
+#       SSH_KEY_FILE: ${{ secrets.STOKENET_SERVER_SSH_KEY }}

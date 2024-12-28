@@ -1,0 +1,7 @@
+---
+# vars file for IPFS Server
+kubo_url: "https://dist.ipfs.tech/kubo/v0.32.1/kubo_v0.32.1_linux-amd64.tar.gz"
+update_api_ip: true
+api_ip: 0.0.0.0
+update_gateway_ip: true
+gateway_ip: 0.0.0.0

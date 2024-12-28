@@ -1,0 +1,15 @@
+name: Plan
+on:
+  pull_request:
+    branches: ['main', 'develop']
+
+# Jobs to be executed in the workflow
+jobs:
+  terraform-stokenet:
+    name: "Terraform Plan Stokenet"   
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-plan.yaml@makefile
+    secrets: 
+      GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
+      HCLOUD_TOKEN: ${{ secrets.STOKENET_HCLOUD_TOKEN }}
+      AWS_ACCESS_KEY: ${{ secrets.STOKENET_AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.STOKENET_AWS_SECRET_KEY }} 

@@ -1,0 +1,13 @@
+[Unit]
+Description=IPFS daemon
+After=network.target
+
+[Service]
+User={{ ansible_user }}
+ExecStart=/usr/local/bin/ipfs daemon
+Restart=always
+RestartSec=10
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

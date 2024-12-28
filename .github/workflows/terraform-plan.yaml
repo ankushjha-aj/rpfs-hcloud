@@ -1,0 +1,100 @@
+name: Terraform Workflow
+on:
+  workflow_call:
+    inputs:
+      env:
+        type: string
+        required: false
+        default: stokenet
+        description: Default env name
+      terraform_version:
+        type: string
+        required: false
+        default: "1.7.2"
+        description: Terraform version to use
+    secrets:
+      GH_INFRA_PAT:
+        required: true
+      HCLOUD_TOKEN:
+        required: true
+      AWS_ACCESS_KEY:
+        required: true
+      AWS_SECRET_KEY:
+        required: true
+
+jobs:
+  validate:
+    name: "Validate"
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    defaults:
+      run:
+        working-directory: ./infra/terraform
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+    steps:
+      # Checkout Project
+      - name: Checkout Project
+        uses: actions/checkout@v4
+
+      # Configure AWS Credentials
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4 
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: eu-central-1
+             
+      # Install Terraform 
+      - name: Terraform install
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      
+      # Initialize Terraform workspace
+      - name: Terraform init
+        run: make ENV=${{ inputs.env }} terraform/init
+
+      # Validate Terraform configuration
+      - name: Terraform validate
+        run: make ENV=${{ inputs.env }} terraform/validate
+
+  plan:
+    name: "Terraform Plan ${{ inputs.env }}"
+    needs: [validate]
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    defaults:
+      run:
+        working-directory: ./infra/terraform
+    env:
+      HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
+    strategy:
+      fail-fast: false
+      
+    steps:
+      # Checkout Project
+      - name: Checkout Project
+        uses: actions/checkout@v3
+        
+      # Configure AWS Credentials
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: eu-central-1
+
+      # Install Terrafrom
+      - name: Terraform install
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ inputs.terraform_version }}
+      
+      # Initialize Terraform workspace
+      - name: Terraform init
+        run: make ENV=${{ inputs.env }} terraform/init
+      
+      # Generate Terraform execution plan with locking disabled 
+      - name: Terraform plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
