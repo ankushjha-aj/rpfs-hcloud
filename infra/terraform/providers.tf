@@ -9,7 +9,7 @@ terraform {
 
   backend "s3" {
   }
-  
+
 }
 
 # Configure the Hetzner Cloud provider

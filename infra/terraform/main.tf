@@ -14,7 +14,7 @@ module "hcloud_network" {
   source             = "./modules/hcloud_network"
   org_name           = lookup(local.configs, "org_name")
   app_name           = lookup(local.configs, "app_name")
-  subnet_conf        = lookup(local.configs, "subnet_conf") 
+  subnet_conf        = lookup(local.configs, "subnet_conf")
   network_cidr_block = lookup(local.configs, "network_cidr_block")
 }
 

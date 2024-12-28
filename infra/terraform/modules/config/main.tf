@@ -21,7 +21,7 @@ locals {
 
   # Decode YAML files with template variables
   configs_base = [
-    for f in local.files_base : 
+    for f in local.files_base :
     yamldecode(templatefile("${local.config_path}/${f}", local.tpl_vars))
   ]
   configs_env = [
