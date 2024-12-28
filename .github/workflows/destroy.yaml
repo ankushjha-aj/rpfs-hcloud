@@ -1,0 +1,27 @@
+name: Destroy
+on:
+    workflow_dispatch: #Manual Trigger 
+      inputs:
+        env:
+          description: 'Enviroment'
+          required: true
+          type: choice
+          default: stokenet
+          options:
+            - stokenet
+            - mainnet 
+
+# Jobs to be executed in the workflow
+jobs:
+   terraform-destroy:
+    if: ${{ inputs.env }} == 'stokenet'
+    name: "Terraform Destroy Dev"
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@makefile
+    with:
+      ref: ${{ github.ref }} 
+      env: stokenet
+    secrets:
+      GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
+      HCLOUD_TOKEN: ${{ secrets.DEV_HCLOUD_TOKEN }}
+      HCLOUD_ACCESS_KEY: ${{ secrets.DEV_HCLOUD_ACCESS_KEY }}
+      HCLOUD_SECRET_KEY: ${{ secrets.DEV_HCLOUD_SECRET_KEY }} 
