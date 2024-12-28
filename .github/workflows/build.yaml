@@ -1,7 +1,7 @@
 name: Deploy to Terraform
 on:
   push:
-    branches: ['main', 'develop']
+    branches: ['main', 'develop', 'makefile']
 
 # Jobs to be executed in the workflow
 jobs:
@@ -11,7 +11,7 @@ jobs:
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile 
 
     with:
-      workflow: terraform-apply 
+      workflow: apply 
       ref: ${{ github.ref }} 
       inputs: |
         env: stokenet
