@@ -35,6 +35,6 @@ jobs:
             format: application/vnd.github.v3+json
           workflow: ${{ inputs.workflow }}.yaml
           inputs: ${{ inputs.inputs }}
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.ref }} 
         env:
           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}

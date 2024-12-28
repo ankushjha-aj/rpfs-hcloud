@@ -1,131 +1,131 @@
-name: Terraform
-on: 
-  workflow_call:
-    inputs:
-      env:
-        description: 'stokenet | mainnet'
-        default: stokenet
-        required: false
-        type: string
-      ref:
-        description: Git Ref (Default to workflow branch)
-        required: false
-        type: string
-      terraform_version:
-        type: string
-        required: false
-        default: "1.7.2"
-        description: Terraform version to use
-    secrets:
-      GH_INFRA_PAT:
-        required: true
-      HCLOUD_TOKEN:
-        required: true
-      AWS_ACCESS_KEY:
-        required: true
-      AWS_SECRET_KEY:
-        required: true
+# name: Terraform
+# on: 
+#   workflow_call:
+#     inputs:
+#       env:
+#         description: 'stokenet | mainnet'
+#         default: stokenet
+#         required: false
+#         type: string
+#       ref:
+#         description: Git Ref (Default to workflow branch)
+#         required: false
+#         type: string
+#       terraform_version:
+#         type: string
+#         required: false
+#         default: "1.7.2"
+#         description: Terraform version to use
+#     secrets:
+#       GH_INFRA_PAT:
+#         required: true
+#       HCLOUD_TOKEN:
+#         required: true
+#       AWS_ACCESS_KEY:
+#         required: true
+#       AWS_SECRET_KEY:
+#         required: true
 
-# Jobs to be executed in the workflow
-jobs:
-  # Plan for TF Files
-  plan:
-    name: "Plan (${{ inputs.env }})"
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.env }}
-    defaults:
-      run:
-        working-directory: ./infra/terraform
-    env:
-      HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
-    strategy:
-      fail-fast: false
-    steps:
-      # Checkout Project
-      - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.ref || github.ref }}
+# # Jobs to be executed in the workflow
+# jobs:
+#   # Plan for TF Files
+#   plan:
+#     name: "Plan (${{ inputs.env }})"
+#     runs-on: ubuntu-latest
+#     environment: ${{ inputs.env }}
+#     defaults:
+#       run:
+#         working-directory: ./infra/terraform
+#     env:
+#       HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
+#     strategy:
+#       fail-fast: false
+#     steps:
+#       # Checkout Project
+#       - name: Checkout Project
+#         uses: actions/checkout@v3
+#         with:
+#           ref: ${{ inputs.ref || github.ref }}
 
-      # Configure AWS Credentials
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: eu-central-1
+#       # Configure AWS Credentials
+#       - name: configure aws credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+#           aws-region: eu-central-1
       
-      # Install Terrafrom
-      - name: Terraform install
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ inputs.terraform_version }}
+#       # Install Terrafrom
+#       - name: Terraform install
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: ${{ inputs.terraform_version }}
       
-      # Initialize Terraform workspace
-      - name: Terraform init
-        run: make ENV=${{ inputs.env }} terraform/init
+#       # Initialize Terraform workspace
+#       - name: Terraform init
+#         run: make ENV=${{ inputs.env }} terraform/init
       
-      # Generate Terraform execution plan with locking disabled 
-      - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
+#       # Generate Terraform execution plan with locking disabled 
+#       - name: Terraform plan
+#         run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
       
-      # Upload plan Artifacts
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-${{ inputs.env }}
-          path: ./infra/terraform/tfplan-${{ inputs.env }}
-          retention-days: 1
+#       # Upload plan Artifacts
+#       - name: Upload Plan Artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: tfplan-${{ inputs.env }}
+#           path: ./infra/terraform/tfplan-${{ inputs.env }}
+#           retention-days: 1
 
-  # Apply for TF Files
-  apply:
-    needs: [plan]
-    name: "Apply (${{ inputs.env }})"
-    runs-on: ubuntu-latest
-    environment: ${{ inputs.env }}
-    defaults:
-      run:
-        working-directory: ./infra/terraform
-    env:
-      HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
-    strategy:
-      fail-fast: false
-    steps:
-      # Checkout Project
-      - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.ref || github.ref }}
+#   # Apply for TF Files
+#   apply:
+#     needs: [plan]
+#     name: "Apply (${{ inputs.env }})"
+#     runs-on: ubuntu-latest
+#     environment: ${{ inputs.env }}
+#     defaults:
+#       run:
+#         working-directory: ./infra/terraform
+#     env:
+#       HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
+#     strategy:
+#       fail-fast: false
+#     steps:
+#       # Checkout Project
+#       - name: Checkout Project
+#         uses: actions/checkout@v3
+#         with:
+#           ref: ${{ inputs.ref || github.ref }}
       
-      # Configure AWS Credentials
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-          aws-region: eu-central-1
+#       # Configure AWS Credentials
+#       - name: configure aws credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+#           aws-region: eu-central-1
 
 
-      # Download Plan Artifacts
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-${{ inputs.env }}
-          path: ./infra/terraform
+#       # Download Plan Artifacts
+#       - name: Download Plan Artifact
+#         uses: actions/download-artifact@v4
+#         with:
+#           name: tfplan-${{ inputs.env }}
+#           path: ./infra/terraform
       
-      # Install Terraform
-      - name: Terraform install
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ inputs.terraform_version }}
+#       # Install Terraform
+#       - name: Terraform install
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: ${{ inputs.terraform_version }}
       
-      # Initialize Terraform workspace
-      - name: Terraform init
-        run: make ENV=${{ inputs.env }} terraform/init
+#       # Initialize Terraform workspace
+#       - name: Terraform init
+#         run: make ENV=${{ inputs.env }} terraform/init
         
-      # Apply Terraform changes using the saved execution plan
-      - name: Terraform Apply
-        run: |
-          make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve tfplan-${{ inputs.env }}' terraform/apply
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
+#       # Apply Terraform changes using the saved execution plan
+#       - name: Terraform Apply
+#         run: |
+#           make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve tfplan-${{ inputs.env }}' terraform/apply
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
