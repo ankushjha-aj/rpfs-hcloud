@@ -21,9 +21,9 @@ on:
         required: true
       HCLOUD_TOKEN:
         required: true
-      HCLOUD_ACCESS_KEY:
+      AWS_ACCESS_KEY:
         required: true
-      HCLOUD_SECRET_KEY:
+      AWS_SECRET_KEY:
         required: true
 
 # Jobs to be executed in the workflow
@@ -52,8 +52,8 @@ jobs:
       # Configure AWS CLI for Hcloud Storage Bucket
       - name: Configure AWS CLI
         run: |
-          aws configure set aws_access_key_id ${{ secrets.HCLOUD_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.HCLOUD_SECRET_KEY }}
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
           aws configure set region eu-central-1
       
       # Install Terrafrom
@@ -98,17 +98,12 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref || github.ref }}
-      
-      # Configure Git Override for private Repositories
-      - name: Configure git override
-        run: |
-          git config --global url."https://oauth2:${{ secrets.GH_INFRA_PAT }}@github.com".insteadOf ssh://git@github.com
-
+    
       # Configure AWS CLI
       - name: Configure AWS CLI
         run: |
-          aws configure set aws_access_key_id ${{ secrets.HCLOUD_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.HCLOUD_SECRET_KEY }}
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }} 
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }} 
           aws configure set region eu-central-1
 
 
