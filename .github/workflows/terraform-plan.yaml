@@ -71,6 +71,11 @@ jobs:
       HCLOUD_TOKEN : ${{ secrets.HCLOUD_TOKEN }}
     strategy:
       fail-fast: false
+      matrix:
+        env:
+        - stokenet
+        - mainnet
+
     steps:
       # Checkout Project
       - name: Checkout Project
@@ -92,7 +97,7 @@ jobs:
       
       # Initialize Terraform workspace
       - name: Terraform init
-        run: make ENV=${{ inputs.env }} terraform/init
+        run: make ENV=${{ matrix.env }} terraform/init
       
       # Generate Terraform execution plan with locking disabled 
       - name: Terraform plan
