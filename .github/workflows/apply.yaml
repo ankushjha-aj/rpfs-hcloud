@@ -1,0 +1,29 @@
+name: Terrform Apply
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Target environment'
+        default: stokenet
+        required: true
+        type: choice
+        options:
+          - stokenet
+          - mainnet
+      ref:
+        description: Git Ref (Default to workflow branch)
+        required: false
+
+# Jobs to be executed in the workflow
+jobs:
+   terraform-apply-stokenet:
+    name: "Terraform Apply Stokenet"
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-apply.yaml@makefile  
+    with:
+      ref: ${{ github.ref }} 
+      env: ${{ github.event.inputs.env }} 
+    secrets:
+      GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
+      HCLOUD_TOKEN: ${{ secrets.STOKENET_HCLOUD_TOKEN }}
+      AWS_ACCESS_KEY: ${{ secrets.STOKENET_AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.STOKENET_AWS_SECRET_KEY }}
