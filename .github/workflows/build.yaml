@@ -5,19 +5,16 @@ on:
 
 # Jobs to be executed in the workflow
 jobs:
-# Job for applying Terraform in the stokenet environment.
   terraform-apply-stokenet:
     name: "Terraform apply"
     if: ${{ github.ref_name == 'develop'}}
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile 
-    with:
-      workflow: terraform-apply # Triggering the 'apply' workflow
-      ref: ${{ github.ref }} # Using the Git reference from the push event
-      workflow_inputs: |
-        env: stokenet 
-        ref: ${{ github.sha }} 
 
-    # Secrets needed for the job (GH_INFRA_PAT)
+    with:
+      workflow: terraform-apply 
+      ref: ${{ github.ref }} 
+      inputs: |
+        env: dev 
+        ref: ${{ github.sha }} 
     secrets:
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
-
