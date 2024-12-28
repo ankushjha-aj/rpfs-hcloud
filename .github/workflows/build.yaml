@@ -22,7 +22,7 @@ jobs:
   terraform-apply-stage:
     name: "Terraform apply"
     if: ${{ github.ref_name == 'main' }}
-    uses: Truly-Financial/truly-shared-workflows/.github/workflows/workflow-trigger.yaml@develop
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile
     # Input parameters for the job
     with:
       workflow: terraform-plan # Triggering the 'apply' workflow
