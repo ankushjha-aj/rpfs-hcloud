@@ -63,7 +63,8 @@ jobs:
     name: "Terraform Plan ${{ inputs.env }}"
     needs: [validate]
     runs-on: ubuntu-latest
-    environment: ${{ inputs.env }}
+    concurrency: terraform-${{ matrix.env }}
+    environment: ${{ matrix.env }}
     defaults:
       run:
         working-directory: ./infra/terraform
