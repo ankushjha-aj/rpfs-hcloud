@@ -122,6 +122,6 @@ jobs:
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
         
-      # Apply Terraform changes using the saved execution plan
-      - name: Terraform Apply
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
+      # # Apply Terraform changes using the saved execution plan
+      # - name: Terraform Apply
+      #   run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
