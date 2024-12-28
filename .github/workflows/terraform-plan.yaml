@@ -97,4 +97,4 @@ jobs:
       
       # Generate Terraform execution plan with locking disabled 
       - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan 
