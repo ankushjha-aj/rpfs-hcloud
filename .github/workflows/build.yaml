@@ -6,7 +6,7 @@ on:
 # Jobs to be executed in the workflow
 jobs:
   terraform-apply-stokenet:
-    name: "Terraform apply Stokenet"
+    name: "Terraform apply"
     if: ${{ github.ref_name == 'develop'}}
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/workflow-trigger.yaml@makefile 
 
