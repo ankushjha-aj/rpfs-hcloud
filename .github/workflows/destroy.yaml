@@ -15,7 +15,7 @@ on:
 jobs:
    terraform-destroy:
     if: ${{ inputs.env }} == 'stokenet'
-    name: "Terraform Destroy Dev"
+    name: "Terraform Destroy Stokenet"
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@makefile
     with:
       ref: ${{ github.ref }} 
