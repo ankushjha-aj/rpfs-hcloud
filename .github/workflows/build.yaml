@@ -13,7 +13,7 @@ jobs:
     with:
       workflow: terraform-apply # Triggering the 'apply' workflow
       ref: ${{ github.ref }} # Using the Git reference from the push event
-      inputs: |
+      workflow_inputs: |
         env: stokenet # Using the environment from the push event
         ref: ${{ github.sha }} # Using the Git SHA from the push event
 
