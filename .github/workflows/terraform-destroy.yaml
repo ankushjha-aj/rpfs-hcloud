@@ -26,9 +26,7 @@ on:
       AWS_SECRET_KEY:
         required: true
 
-# Jobs to be executed in the workflow
 jobs:
-  # Plan for TF Files
   plan:
     name: "Plan (${{ inputs.env }})"
     runs-on: ubuntu-latest
@@ -42,13 +40,11 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-        # Checkout Project
         - name: Checkout Project
           uses: actions/checkout@v3
           with:
             ref: ${{ inputs.ref || github.ref }}
   
-        # Configure AWS Credentials
         - name: configure aws credentials
           uses: aws-actions/configure-aws-credentials@v4
           with:
@@ -56,19 +52,17 @@ jobs:
             aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
             aws-region: eu-central-1
         
-        # Install Terrafrom
         - name: Terraform install
           uses: hashicorp/setup-terraform@v3
           with:
             terraform_version: ${{ inputs.terraform_version }}
         
-        # Initialize Terraform workspace
         - name: Terraform init
           run: make ENV=${{ inputs.env }} terraform/init
         
-        # Generate Terraform execution plan and save it to terraform.plan file
+        # Modified to create a destroy plan
         - name: Terraform plan
-          run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-out=./terraform.plan' terraform/plan 
+          run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-destroy -out=./terraform.plan' terraform/plan 
           env:
             GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
       
@@ -79,7 +73,6 @@ jobs:
             path: ./infra/terraform/terraform.plan
             if-no-files-found: error 
 
-  # Destroy 
   Destroy:
     needs: [plan]
     name: "Destroy (${{ inputs.env }})"
@@ -93,13 +86,11 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      # Checkout Project
       - name: Checkout Project
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref || github.ref }}
 
-      # Configure AWS Credentials
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -107,22 +98,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: eu-central-1
 
-      # Install Terraform
       - name: Terraform install
         uses: hashicorp/setup-terraform@v3
         with:            
-            terraform_version: ${{ inputs.terraform_version }}
+          terraform_version: ${{ inputs.terraform_version }}
 
-      # Download the terraform plan artifact
       - name: Download terraform plan
         uses: actions/download-artifact@v4
         with:
           name: terraform.plan
-          path: ${{ github.workspace }}/infra/terraform
+          path: infra/terraform
     
-      # Initialize Terraform workspace
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
 
-      - name: Terraform destroy
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/destroy
+      # Changed to apply the destroy plan
+      - name: Apply destroy plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
