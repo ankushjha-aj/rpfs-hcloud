@@ -16,7 +16,7 @@ jobs:
    terraform-destroy:
     if: ${{ inputs.env }} == 'stokenet'
     name: "Terraform Destroy Stokenet"
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@ankushjha-aj-patch-2
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@develop
     with:
       env: stokenet
     secrets:
