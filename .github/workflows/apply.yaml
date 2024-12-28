@@ -1,5 +1,7 @@
 name: Terrform Apply
 on:
+  repository_dispatch:
+    types: [terraform-apply]
   workflow_dispatch:
     inputs:
       env:
