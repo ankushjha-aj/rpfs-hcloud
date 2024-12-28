@@ -16,12 +16,12 @@ jobs:
    terraform-destroy:
     if: ${{ inputs.env }} == 'stokenet'
     name: "Terraform Destroy Stokenet"
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@makefile
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-destroy.yaml@makefile 
     with:
       ref: ${{ github.ref }} 
       env: stokenet
     secrets:
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
-      HCLOUD_TOKEN: ${{ secrets.DEV_HCLOUD_TOKEN }}
-      HCLOUD_ACCESS_KEY: ${{ secrets.DEV_HCLOUD_ACCESS_KEY }}
-      HCLOUD_SECRET_KEY: ${{ secrets.DEV_HCLOUD_SECRET_KEY }} 
+      HCLOUD_TOKEN: ${{ secrets.STOKENET_HCLOUD_TOKEN }}
+      AWS_ACCESS_KEY: ${{ secrets.STOKENET_AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.STOKENET_AWS_SECRET_KEY }}
