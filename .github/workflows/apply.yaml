@@ -1,4 +1,4 @@
-name: Terrform Apply
+name: Terraform Apply
 on:
   repository_dispatch:
     types: [terraform-apply]
@@ -20,6 +20,19 @@ on:
 jobs:
    terraform-apply-stokenet:
     name: "Terraform Apply Stokenet"
+    if: github.ref_name == 'develop'
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-apply.yaml@develop
+    with:
+      ref: ${{ github.ref }} 
+      env: ${{ github.event.inputs.env }} 
+    secrets:
+      GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
+      HCLOUD_TOKEN: ${{ secrets.STOKENET_HCLOUD_TOKEN }}
+      AWS_ACCESS_KEY: ${{ secrets.STOKENET_AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.STOKENET_AWS_SECRET_KEY }}
+
+   terraform-apply-mainnet:
+    name: "Terraform Apply Mainnet"
     if: github.ref_name == 'main'
     uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-apply.yaml@develop
     with:
