@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       env:
-        description: 'mainnet | stokenet'
+        description: 'stokenet | mainnet'
         required: false
         type: string
         default: stokenet
@@ -26,9 +26,7 @@ on:
       AWS_SECRET_KEY:
         required: true
 
-# Jobs to be executed in the workflow
 jobs:
-  # Plan for TF Files
   plan:
     name: "Plan (${{ inputs.env }})"
     runs-on: ubuntu-latest
@@ -42,48 +40,43 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      # Checkout Project
-      - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ inputs.ref || github.ref }}
+        - name: Checkout Project
+          uses: actions/checkout@v3
+          with:
+            ref: ${{ inputs.ref || github.ref }}
+  
+        - name: configure aws credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+            aws-region: eu-central-1
+        
+        - name: Terraform install
+          uses: hashicorp/setup-terraform@v3
+          with:
+            terraform_version: ${{ inputs.terraform_version }}
+        
+        - name: Terraform init
+          run: make ENV=${{ inputs.env }} terraform/init
+        
+        # Modified to create a destroy plan
+        - name: Terraform plan
+          run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-destroy -out=./terraform.plan' terraform/plan 
+          env:
+            GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
+      
+        - name: Save terraform plan
+          uses: actions/upload-artifact@v4
+          with:
+            name: terraform.plan
+            path: ./infra/terraform/terraform.plan
+            if-no-files-found: error 
 
-      
-      # Configure AWS CLI for Hcloud Storage Bucket
-      - name: Configure AWS CLI
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }}
-          aws configure set region eu-central-1
-      
-      # Install Terrafrom
-      - name: Terraform install
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: ${{ inputs.terraform_version }}
-      
-      # Initialize Terraform workspace
-      - name: Terraform init
-        run: make ENV=${{ inputs.env }} terraform/init
-      
-      # Generate Terraform execution plan with locking disabled 
-      - name: Terraform plan
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-lock=false' terraform/plan
-      
-      # Upload plan Artifacts
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: tfplan-${{ inputs.env }}
-          path: ./infra/terraform/tfplan
-          retention-days: 1
-
-  # Destroy 
   Destroy:
     needs: [plan]
     name: "Destroy (${{ inputs.env }})"
     runs-on: ubuntu-latest
-    concurrency: terraform-${{ inputs.env }}
     environment: ${{ inputs.env }}
     defaults:
       run:
@@ -93,39 +86,34 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      # Checkout Project
       - name: Checkout Project
         uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref || github.ref }}
-    
-      # Configure AWS CLI
-      - name: Configure AWS CLI
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY }} 
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_KEY }} 
-          aws configure set region eu-central-1
 
-      # Download Plan Artifacts
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v3
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          name: tfplan-${{ inputs.env }}
-          path: ./infra/terraform
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: eu-central-1
 
-      # Install Terraform
       - name: Terraform install
         uses: hashicorp/setup-terraform@v3
-        with:
+        with:            
           terraform_version: ${{ inputs.terraform_version }}
-      
-      # Initialize Terraform workspace
+
+      - name: Download terraform plan
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform.plan
+          path: infra/terraform
+    
       - name: Terraform init
         run: make ENV=${{ inputs.env }} terraform/init
 
-      # Validate Terraform configuration
-      - name: Terraform validate
-        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='--auto-approve' terraform/destroy
-
-
-
+      # Changed to apply the destroy plan
+      - name: Apply destroy plan
+        run: make ENV=${{ inputs.env }} TF_CMD_ARGS='-auto-approve terraform.plan' terraform/apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_INFRA_PAT }}
