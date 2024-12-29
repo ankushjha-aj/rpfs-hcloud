@@ -7,7 +7,7 @@ on:
 jobs:
   terraform-stokenet:
     name: "Terraform Plan Stokenet"   
-    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-plan.yaml@makefile
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/terraform-plan.yaml@develop
     secrets: 
       GH_INFRA_PAT: ${{ secrets.GH_INFRA_PAT }}
       HCLOUD_TOKEN: ${{ secrets.STOKENET_HCLOUD_TOKEN }}
