@@ -1,0 +1,14 @@
+name: Use Reusable Decrypt Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  call-decrypt-workflow:
+    uses: ankushjha-aj/rpfs-hcloud/.github/workflows/sops-reusable.yml@sops
+    with:
+      aws-region: "eu-central-1"  
+      file-to-decrypt: "ashwini.enc.yml"
+    secrets: 
+      AWS_ACCESS_KEY: ${{ secrets.STOKENET_AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.STOKENET_AWS_SECRET_KEY }} 
