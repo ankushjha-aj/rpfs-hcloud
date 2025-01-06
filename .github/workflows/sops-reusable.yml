@@ -1,0 +1,34 @@
+name: Reusable Decrypt Workflow
+on:
+  workflow_call:
+    inputs:
+      file-to-decrypt:
+        required: true
+        type: string
+
+jobs:
+  decrypt-and-echo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+      # Configure AWS Credentials
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+        aws-region: eu-central-1
+
+    - name: Install sops
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y sops
+
+    - name: Decrypt the file
+      run: |
+        sops --decrypt ${{ inputs.file-to-decrypt }} > decrypted-file.yml
+        echo "Decrypted file content:"
+        cat decrypted-file.yml
